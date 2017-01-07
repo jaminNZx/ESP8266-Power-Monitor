@@ -7,9 +7,9 @@
 #include <Adafruit_INA219.h>
 #include <SimpleTimer.h>
 /****************************************************************************/
-char auth[] = "9739e5f9d95941c99ca2b96526e70d5e";
-char ssid[] = "PrettyFlyForAWiFi";
-char pass[] = "custom2015";
+char auth[] = "xxxxxxxx";
+char ssid[] = "xxxxxxxx";
+char pass[] = "xxxxxxxx";
 /****************************************************************************/
 SimpleTimer timer;
 Adafruit_INA219 ina219;
@@ -316,7 +316,7 @@ BLYNK_WRITE(19) {
   Blynk.virtualWrite(18, String(energyPrice, 4) + String('c') );
 }
 void getPrice() {
-  Blynk.virtualWrite(19, "http://192.168.1.2:3000");
+  Blynk.virtualWrite(19, "http://192.168.1.2:3000"); // local API Server to get current power price per mWh
 }
 
 void splitTask1() {
