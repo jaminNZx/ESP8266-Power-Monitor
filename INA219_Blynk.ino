@@ -383,7 +383,6 @@ void setup() {
   
   // setup interval timers
   pollingTimer = timer.setInterval(1000, getINA219values);
-  priceTimer = timer.setInterval(20000, getPrice);
   graphTimer = timer.setInterval(2000, sendINA219_GraphValues);
   stopwatchTimer = timer.setInterval(1000, stopwatchCounter);
   
@@ -402,9 +401,9 @@ void setup() {
   if(!FIXED_ENERGY_PRICE){
     // No fixed price set, so pull from local API
     Blynk.virtualWrite(19, "http://192.168.1.2:3000/");
+    priceTimer = timer.setInterval(20000, getPrice); // start a 20sec timer for updates
   } else {
     // else set fixed price with configured price
-    Blynk.virtualWrite(19, FIXED_ENERGY_PRICE);
     energyPrice = FIXED_ENERGY_PRICE;
   }
 }
