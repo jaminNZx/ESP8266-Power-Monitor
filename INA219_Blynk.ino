@@ -7,9 +7,14 @@
 #include <Adafruit_INA219.h>
 #include <SimpleTimer.h>
 /****************************************************************************/
+// you should only need to update the following section with your unique data
 char auth[] = "xxxxxxxx";
 char ssid[] = "xxxxxxxx";
 char pass[] = "xxxxxxxx";
+// Select if using a local server. Change the IP in setup()
+int LOCAL_SERVER = 0;
+// If you have a fixed energy kWh price, set it here. 0 to use webhook API to pull data
+float FIXED_ENERGY_PRICE = 0; 
 /****************************************************************************/
 SimpleTimer timer;
 Adafruit_INA219 ina219;
@@ -29,7 +34,8 @@ float loadvoltage_AVG, loadvoltage_AVG_cycle, loadvoltage_AVG_1, loadvoltage_AVG
 float power_AVG, power_AVG_cycle, power_AVG_1, power_AVG_2, power_AVG_3, power_AVG_4, power_AVG_5;
 /****************************************************************************/
 void getINA219values() {
-
+  
+  // get the INA219 values and throw some basic math at them
   shuntvoltage = ina219.getShuntVoltage_mV();
   busvoltage = ina219.getBusVoltage_V();
   current_mA = ina219.getCurrent_mA();
@@ -37,7 +43,7 @@ void getINA219values() {
   power = (current_mA / 1000) * loadvoltage * 1000; // mW
   energy = energy + (power / 1000 / 1000);
 
-  // NOTHING CONNECTED SO SET EVERYTHING TO 0
+  // nothing connected? set all to 0, otherwise they float around 0.
   if (loadvoltage < 1.1 && loadvoltage > 1 && current_mA < 2 && power < 2) {
     loadvoltage = 0;
     current_mA = 0;
@@ -45,6 +51,7 @@ void getINA219values() {
     energy = 0;
   }
 
+  // gather voltage average from 5 samples over 5 seconds
   loadvoltage_AVG_cycle++;
   if (loadvoltage_AVG_cycle == 1) {
     loadvoltage_AVG_1 = loadvoltage;
@@ -63,6 +70,7 @@ void getINA219values() {
     loadvoltage_AVG_cycle = 0;
   }
 
+  // gather current average from 5 samples over 5 seconds
   current_AVG_cycle++;
   if (current_AVG_cycle == 1) {
     current_AVG_1 = current_mA;
@@ -80,7 +88,8 @@ void getINA219values() {
     current_AVG_5 = current_mA;
     current_AVG_cycle = 0;
   }
-
+  
+  // gather power average from 5 samples over 5 seconds
   power_AVG_cycle++;
   if (power_AVG_cycle == 1) {
     power_AVG_1 = power;
@@ -100,6 +109,8 @@ void getINA219values() {
   }
 
 }
+
+// this function is for updaing the REAL TIME values and is on a timer
 void sendINA219valuesREAL() {
   // LOAD VOLTAGE (REAL TIME)
   Blynk.virtualWrite(1, String(loadvoltage, 4) + String(" V") );
@@ -117,6 +128,7 @@ void sendINA219valuesREAL() {
   }
 }
 
+// this function is for updaing the AVERGE values and is on a timer
 void sendINA219valuesAVG() {
   // LOAD VOLTAGE (AVERAGE)
   loadvoltage_AVG = (loadvoltage_AVG_1 + loadvoltage_AVG_2 + loadvoltage_AVG_3 + loadvoltage_AVG_4 + loadvoltage_AVG_5) / 5;
@@ -140,6 +152,7 @@ void sendINA219valuesAVG() {
 
 }
 
+// this function is for updaing the MAX values and is on a timer
 void sendINA219valuesMAX() {
   // LOAD VOLTAGE (HIGH)
   if (loadvoltage > loadvoltageMax) {
@@ -166,6 +179,7 @@ void sendINA219valuesMAX() {
   }
 }
 
+// this function is for updaing the ENERGY values and is on a timer
 void sendINA219valuesENERGY() {
   energyDifference = energy - energyPrevious;
   // ENERGY CONSUMPTION
@@ -180,6 +194,7 @@ void sendINA219valuesENERGY() {
   Blynk.virtualWrite(17, String((energyCost), 8));
 }
 
+// this is feeding raw data to the graph
 void sendINA219_GraphValues() {
   Blynk.virtualWrite(5, current_AVG);
 }
@@ -199,6 +214,7 @@ BLYNK_WRITE(6) {
   }
 }
 
+// this function only runs when in HOLD mode and select AUTO-RANGE
 void updateINA219eXtraValues() {
   Blynk.virtualWrite(8, String(loadvoltageMax, 3) + String(" V") );
   if (current_AVG > 1000 && autoRange == 1) {
@@ -213,7 +229,7 @@ void updateINA219eXtraValues() {
   }
 }
 
-// AUTO RANGE
+// AUTO RANGE BUTTON
 BLYNK_WRITE(7) {
   if (param.asInt()) {
     autoRange = 1;
@@ -247,7 +263,6 @@ BLYNK_WRITE(10) {
     power_AVG_3 = power;
     power_AVG_4 = power;
     power_AVG_5 = power;
-    power_AVG = power;
     delay(50);
     updateINA219eXtraValues();
   }
@@ -270,6 +285,8 @@ BLYNK_WRITE(15) {
   }
 }
 
+// this the callback for holding a button longer than 1 second
+// it needs work.. secret = 1?? srsly?.. I need to change this
 void countdownToReset() {
   secret = 1;
   counter2 = timer.setTimeout(500, countdownToNormal);
@@ -277,11 +294,12 @@ void countdownToReset() {
   stopwatch = 0;
   timer.enable(stopwatchTimer);
 }
-
+// callback to change button function back to normal... also needs work
 void countdownToNormal() {
   secret = 0;
 }
 
+// the stopwatch counter which is run on a timer
 void stopwatchCounter() {
   stopwatch++;
   long days = 0;
@@ -310,15 +328,23 @@ void stopwatchCounter() {
   Blynk.virtualWrite(20, days + hours_o + hours + mins_o + mins + secs_o + secs);
 }
 
-
+// This section is for setting the kWh price from your electric company. 
+// I use a SPOT rate which means I need to update it all the time.
+// If you know your set price per kWh (in cents), then enter the price at the top of the sketch: FIXED_ENERGY_PRICE
+void getPrice() {
+  if(!FIXED_ENERGY_PRICE){
+    Blynk.virtualWrite(19, "http://192.168.1.2:3000"); // local API Server to get current power price per mWh
+  } else {
+    Blynk.virtualWrite(19, FIXED_ENERGY_PRICE);
+  }
+}
 BLYNK_WRITE(19) {
   energyPrice = param.asFloat();
   Blynk.virtualWrite(18, String(energyPrice, 4) + String('c') );
 }
-void getPrice() {
-  Blynk.virtualWrite(19, "http://192.168.1.2:3000"); // local API Server to get current power price per mWh
-}
 
+// the functions for the split-task timers. 
+// required to keep the little ESP8266 from disconnections
 void splitTask1() {
   sendTimer1 = timer.setInterval(1000, sendINA219valuesREAL);
 }
@@ -336,31 +362,55 @@ void splitTask5() {
 }
 /****************************************************************************/
 void setup() {
+  // begin setup
   Serial.begin(115200);
   WiFi.mode(WIFI_STA);
-  Blynk.begin(auth, ssid, pass, IPAddress(192, 168, 1, 2));
+  
+  // begin Blynk connection
+  if(!LOCAL_SERVER){
+    Blynk.begin(auth, ssid, pass);
+  } else {
+    Blynk.begin(auth, ssid, pass, IPAddress(192, 168, 1, 2)); // make sure you update the IP/Hostname
+  }
   while (Blynk.connect() == false) {}
-  ArduinoOTA.setHostname("Power-Monitor-1"); // OPTIONAL
+  
+  // setup Over The Air updates
+  ArduinoOTA.setHostname("Power-Monitor-1"); 
   ArduinoOTA.begin();
-  ina219.begin();
-
+  
+  // start ina219 lib
+  ina219.begin(); 
+  
+  // setup interval timers
   pollingTimer = timer.setInterval(1000, getINA219values);
   priceTimer = timer.setInterval(20000, getPrice);
   graphTimer = timer.setInterval(2000, sendINA219_GraphValues);
   stopwatchTimer = timer.setInterval(1000, stopwatchCounter);
-
+  
+  // setup split-task timers so we dont overload ESP 
+  // with too many virtualWrites per second
   splitTimer1 = timer.setTimeout(200, splitTask1);
   splitTimer2 = timer.setTimeout(400, splitTask2);
   splitTimer3 = timer.setTimeout(600, splitTask3);
   splitTimer4 = timer.setTimeout(800, splitTask4);
-
-  autoRange = 1;
-  Blynk.virtualWrite(7, 1);
-  // GET LATEST PRICE ON STARTUP, THEN EVERY 10 SEC
-  Blynk.virtualWrite(19, "http://192.168.1.2:3000/");
+  
+  // start in auto-range mode & sync widget to hardware state
+  autoRange = 1;             
+  Blynk.virtualWrite(7, 1); 
+  
+  // Check for fixed energy price and update global 'energyPrice'
+  if(!FIXED_ENERGY_PRICE){
+    // No fixed price set, so pull from local API
+    Blynk.virtualWrite(19, "http://192.168.1.2:3000/");
+  } else {
+    // else set fixed price with configured price
+    Blynk.virtualWrite(19, FIXED_ENERGY_PRICE);
+    energyPrice = FIXED_ENERGY_PRICE;
+  }
 }
 /****************************************************************************/
 void loop() {
+  // the loop... dont touch or add to this!
   Blynk.run();
   ArduinoOTA.handle();
   timer.run();
