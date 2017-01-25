@@ -12,7 +12,7 @@ char auth[] = "xxxxxxxx";
 char ssid[] = "xxxxxxxx";
 char pass[] = "xxxxxxxx";
 // Select if using a local server. Change the IP in setup()
-int LOCAL_SERVER = 0;
+int LOCAL_SERVER = FALSE;
 // If you have a fixed energy kWh price, set it here. 0 to use webhook API to pull data
 float FIXED_ENERGY_PRICE = 0; 
 /****************************************************************************/
