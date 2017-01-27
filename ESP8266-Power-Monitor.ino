@@ -233,9 +233,9 @@ BLYNK_WRITE(vPIN_BUTTON_AUTORANGE) {
 // RESET AVERAGES
 BLYNK_WRITE(vPIN_BUTTON_RESET_AVG) {
   if (param.asInt() && secret == 0) {
-    Blynk.virtualWrite(9,  "--- V");
-    Blynk.virtualWrite(12, "--- mA");
-    Blynk.virtualWrite(14, "--- mW");
+    Blynk.virtualWrite(vPIN_VOLTAGE_AVG,  "--- V");
+    Blynk.virtualWrite(vPIN_CURRENT_AVG, "--- mA");
+    Blynk.virtualWrite(vPIN_POWER_AVG, "--- mW");
     loadvoltage_AVG = loadvoltage;
     loadvoltage_AVG_1 = loadvoltage;
     loadvoltage_AVG_2 = loadvoltage;
@@ -383,6 +383,7 @@ void setup() {
 #if defined(FIXED_ENERGY_PRICE)
   // else set fixed price with configured price
   energyPrice = FIXED_ENERGY_PRICE;
+  Blynk.virtualWrite(vPIN_ENERGY_PRICE, String(FIXED_ENERGY_PRICE, 4) + String('c') );
 #else
   // No fixed price set, so pull from local API
   Blynk.virtualWrite(vPIN_ENERGY_API, ENERGY_API);

@@ -24,7 +24,7 @@
 /*
    Energy Cost per kWh in cents. (comment out to use API method)
 */
-#define FIXED_ENERGY_PRICE      9.934
+//#define FIXED_ENERGY_PRICE      9.934
 #define ENERGY_API              "http://192.168.1.2:3000/"
 /*
    Virtual Pins - Base
