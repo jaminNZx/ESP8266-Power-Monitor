@@ -27,13 +27,6 @@
 #define FIXED_ENERGY_PRICE      9.934
 #define ENERGY_API              "http://192.168.1.2:3000/"
 /*
-   Hardware Pins
-*/
-#define TAP1                    14 // D5
-#define TAP2                    12 // D6
-#define TAP3                    13 // D7
-#define TAP4                    15 // D2
-/*
    Virtual Pins - Base
 */
 #define vPIN_VOLTAGE_REAL       V1 
