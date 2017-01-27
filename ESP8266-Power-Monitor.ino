@@ -6,19 +6,10 @@
 #include <Wire.h>
 #include <Adafruit_INA219.h>
 #include <SimpleTimer.h>
-/****************************************************************************/
-// you should only need to update the following section with your unique data
-char auth[] = "xxxxxxxx";
-char ssid[] = "xxxxxxxx";
-char pass[] = "xxxxxxxx";
-// Select if using a local server. Change the IP in setup()
-int LOCAL_SERVER = FALSE;
-// If you have a fixed energy kWh price, set it here. 0 to use webhook API to pull data
-float FIXED_ENERGY_PRICE = 0; 
+#include "settings.h"
 /****************************************************************************/
 SimpleTimer timer;
 Adafruit_INA219 ina219;
-/****************************************************************************/
 float shuntvoltage = 0.00;
 float busvoltage = 0.00;
 float current_mA = 0.00, current_mA_Max, current_mA_Avg;
@@ -34,7 +25,7 @@ float loadvoltage_AVG, loadvoltage_AVG_cycle, loadvoltage_AVG_1, loadvoltage_AVG
 float power_AVG, power_AVG_cycle, power_AVG_1, power_AVG_2, power_AVG_3, power_AVG_4, power_AVG_5;
 /****************************************************************************/
 void getINA219values() {
-  
+
   // get the INA219 values and throw some basic math at them
   shuntvoltage = ina219.getShuntVoltage_mV();
   busvoltage = ina219.getBusVoltage_V();
@@ -88,7 +79,7 @@ void getINA219values() {
     current_AVG_5 = current_mA;
     current_AVG_cycle = 0;
   }
-  
+
   // gather power average from 5 samples over 5 seconds
   power_AVG_cycle++;
   if (power_AVG_cycle == 1) {
@@ -113,18 +104,18 @@ void getINA219values() {
 // this function is for updaing the REAL TIME values and is on a timer
 void sendINA219valuesREAL() {
   // LOAD VOLTAGE (REAL TIME)
-  Blynk.virtualWrite(1, String(loadvoltage, 4) + String(" V") );
+  Blynk.virtualWrite(vPIN_VOLTAGE_REAL, String(loadvoltage, 4) + String(" V") );
   // LOAD POWER (REAL TIME)
   if (power > 1000 && autoRange == 1) {
-    Blynk.virtualWrite(3, String((power / 1000), 3) + String(" W") );
+    Blynk.virtualWrite(vPIN_POWER_REAL, String((power / 1000), 3) + String(" W") );
   } else {
-    Blynk.virtualWrite(3, String(power, 3) + String(" mW") );
+    Blynk.virtualWrite(vPIN_POWER_REAL, String(power, 3) + String(" mW") );
   }
   // LOAD CURRENT (REAL TIME)
   if (current_mA > 1000 && autoRange == 1) {
-    Blynk.virtualWrite(2, String((current_mA / 1000), 3) + String(" A") );
+    Blynk.virtualWrite(vPIN_CURRENT_REAL, String((current_mA / 1000), 3) + String(" A") );
   } else {
-    Blynk.virtualWrite(2, String(current_mA, 3) + String(" mA"));
+    Blynk.virtualWrite(vPIN_CURRENT_REAL, String(current_mA, 3) + String(" mA"));
   }
 }
 
@@ -132,22 +123,22 @@ void sendINA219valuesREAL() {
 void sendINA219valuesAVG() {
   // LOAD VOLTAGE (AVERAGE)
   loadvoltage_AVG = (loadvoltage_AVG_1 + loadvoltage_AVG_2 + loadvoltage_AVG_3 + loadvoltage_AVG_4 + loadvoltage_AVG_5) / 5;
-  Blynk.virtualWrite(9, String(loadvoltage_AVG, 3) + String(" V"));
+  Blynk.virtualWrite(vPIN_VOLTAGE_AVG, String(loadvoltage_AVG, 3) + String(" V"));
 
   // LOAD CURRENT (AVERAGE)
   current_AVG = (current_AVG_1 + current_AVG_2 + current_AVG_3 + current_AVG_4 + current_AVG_5) / 5;
   if (current_AVG > 1000 && autoRange == 1) {
-    Blynk.virtualWrite(12, String((current_AVG / 1000), 2) + String(" A"));
+    Blynk.virtualWrite(vPIN_CURRENT_AVG, String((current_AVG / 1000), 2) + String(" A"));
   } else {
-    Blynk.virtualWrite(12, String(current_AVG, 2) + String(" mA"));
+    Blynk.virtualWrite(vPIN_CURRENT_AVG, String(current_AVG, 2) + String(" mA"));
   }
 
   // LOAD POWER (AVERAGE)
   power_AVG = (power_AVG_1 + power_AVG_2 + power_AVG_3 + power_AVG_4 + power_AVG_5) / 5;
   if (power_AVG > 1000 && autoRange == 1) {
-    Blynk.virtualWrite(14, String((power_AVG / 1000), 2) + String(" W"));
+    Blynk.virtualWrite(vPIN_POWER_AVG, String((power_AVG / 1000), 2) + String(" W"));
   } else {
-    Blynk.virtualWrite(14, String(power_AVG, 2) + String(" mW"));
+    Blynk.virtualWrite(vPIN_POWER_AVG, String(power_AVG, 2) + String(" mW"));
   }
 
 }
@@ -157,24 +148,24 @@ void sendINA219valuesMAX() {
   // LOAD VOLTAGE (HIGH)
   if (loadvoltage > loadvoltageMax) {
     loadvoltageMax = loadvoltage;
-    Blynk.virtualWrite(8, String(loadvoltageMax, 3) + String(" V") );
+    Blynk.virtualWrite(vPIN_VOLTAGE_PEAK, String(loadvoltageMax, 3) + String(" V") );
   }
   // LOAD CURRENT (HIGH)
   if (current_mA > current_mA_Max) {
     current_mA_Max = current_mA;
     if (current_mA_Max > 1000 && autoRange == 1) {
-      Blynk.virtualWrite(11, String((current_mA_Max / 1000), 2) + String(" A") );
+      Blynk.virtualWrite(vPIN_CURRENT_PEAK, String((current_mA_Max / 1000), 2) + String(" A") );
     } else {
-      Blynk.virtualWrite(11, String(current_mA_Max, 2) + String(" mA"));
+      Blynk.virtualWrite(vPIN_CURRENT_PEAK, String(current_mA_Max, 2) + String(" mA"));
     }
   }
   // LOAD POWER (HIGH)
   if (power > powerMax) {
     powerMax = power;
     if (powerMax > 1000 && autoRange == 1) {
-      Blynk.virtualWrite(13, String((powerMax / 1000), 2) + String(" W") );
+      Blynk.virtualWrite(vPIN_POWER_PEAK, String((powerMax / 1000), 2) + String(" W") );
     } else {
-      Blynk.virtualWrite(13, String(powerMax, 2) + String(" mW"));
+      Blynk.virtualWrite(vPIN_POWER_PEAK, String(powerMax, 2) + String(" mW"));
     }
   }
 }
@@ -184,23 +175,23 @@ void sendINA219valuesENERGY() {
   energyDifference = energy - energyPrevious;
   // ENERGY CONSUMPTION
   if (energy > 1000 && autoRange == 1) {
-    Blynk.virtualWrite(4, String((energy / 1000), 6) + String(" kWh"));
+    Blynk.virtualWrite(vPIN_ENERGY_USED, String((energy / 1000), 6) + String(" kWh"));
   } else {
-    Blynk.virtualWrite(4, String(energy, 6) + String(" mWh"));
+    Blynk.virtualWrite(vPIN_ENERGY_USED, String(energy, 6) + String(" mWh"));
   }
   energyPrevious = energy;
   // ENERGY COST
   energyCost = energyCost + ((energyPrice / 1000 / 100) * energyDifference);
-  Blynk.virtualWrite(17, String((energyCost), 8));
+  Blynk.virtualWrite(vPIN_ENERGY_COST, String((energyCost), 8));
 }
 
 // this is feeding raw data to the graph
 void sendINA219_GraphValues() {
-  Blynk.virtualWrite(5, current_AVG);
+  Blynk.virtualWrite(vPIN_CURRENT_GRAPH, current_AVG);
 }
 
 // HOLD BUTTON
-BLYNK_WRITE(6) {
+BLYNK_WRITE(vPIN_BUTTON_HOLD) {
   if (param.asInt()) {
     timer.disable(sendTimer1);
     timer.disable(sendTimer2);
@@ -216,21 +207,21 @@ BLYNK_WRITE(6) {
 
 // this function only runs when in HOLD mode and select AUTO-RANGE
 void updateINA219eXtraValues() {
-  Blynk.virtualWrite(8, String(loadvoltageMax, 3) + String(" V") );
+  Blynk.virtualWrite(vPIN_VOLTAGE_PEAK, String(loadvoltageMax, 3) + String(" V") );
   if (current_AVG > 1000 && autoRange == 1) {
-    Blynk.virtualWrite(11, String((current_AVG / 1000), 2) + String(" A") );
+    Blynk.virtualWrite(vPIN_CURRENT_PEAK, String((current_AVG / 1000), 2) + String(" A") );
   } else {
-    Blynk.virtualWrite(11, String(current_AVG, 2) + String(" mA"));
+    Blynk.virtualWrite(vPIN_CURRENT_PEAK, String(current_AVG, 2) + String(" mA"));
   }
   if (powerMax > 1000 && autoRange == 1) {
-    Blynk.virtualWrite(13, String((powerMax / 1000), 2) + String(" W") );
+    Blynk.virtualWrite(vPIN_POWER_PEAK, String((powerMax / 1000), 2) + String(" W") );
   } else {
-    Blynk.virtualWrite(13, String(powerMax, 2) + String(" mW"));
+    Blynk.virtualWrite(vPIN_POWER_PEAK, String(powerMax, 2) + String(" mW"));
   }
 }
 
 // AUTO RANGE BUTTON
-BLYNK_WRITE(7) {
+BLYNK_WRITE(vPIN_BUTTON_AUTORANGE) {
   if (param.asInt()) {
     autoRange = 1;
   } else {
@@ -240,7 +231,7 @@ BLYNK_WRITE(7) {
 }
 
 // RESET AVERAGES
-BLYNK_WRITE(10) {
+BLYNK_WRITE(vPIN_BUTTON_RESET_AVG) {
   if (param.asInt() && secret == 0) {
     Blynk.virtualWrite(9,  "--- V");
     Blynk.virtualWrite(12, "--- mA");
@@ -269,11 +260,11 @@ BLYNK_WRITE(10) {
 }
 
 // RESET PEAKS
-BLYNK_WRITE(15) {
+BLYNK_WRITE(vPIN_BUTTON_RESET_MAX) {
   if (param.asInt() && secret == 0) {
-    Blynk.virtualWrite(8, "--- V");
-    Blynk.virtualWrite(11, "--- mA");
-    Blynk.virtualWrite(13, "--- mW");
+    Blynk.virtualWrite(vPIN_VOLTAGE_PEAK, "--- V");
+    Blynk.virtualWrite(vPIN_CURRENT_PEAK, "--- mA");
+    Blynk.virtualWrite(vPIN_POWER_PEAK, "--- mW");
     loadvoltageMax = loadvoltage;
     current_mA_Max = current_mA;
     powerMax = power;
@@ -290,7 +281,7 @@ BLYNK_WRITE(15) {
 void countdownToReset() {
   secret = 1;
   counter2 = timer.setTimeout(500, countdownToNormal);
-  Blynk.virtualWrite(20, "--:--:--:--");
+  Blynk.virtualWrite(vPIN_ENERGY_TIME, "--:--:--:--");
   stopwatch = 0;
   timer.enable(stopwatchTimer);
 }
@@ -325,25 +316,21 @@ void stopwatchCounter() {
   if (hours < 10) {
     hours_o = ":0";
   }
-  Blynk.virtualWrite(20, days + hours_o + hours + mins_o + mins + secs_o + secs);
+  Blynk.virtualWrite(vPIN_ENERGY_TIME, days + hours_o + hours + mins_o + mins + secs_o + secs);
 }
 
-// This section is for setting the kWh price from your electric company. 
+// This section is for setting the kWh price from your electric company.
 // I use a SPOT rate which means I need to update it all the time.
 // If you know your set price per kWh (in cents), then enter the price at the top of the sketch: FIXED_ENERGY_PRICE
 void getPrice() {
-  if(!FIXED_ENERGY_PRICE){
-    Blynk.virtualWrite(19, "http://192.168.1.2:3000"); // local API Server to get current power price per mWh
-  } else {
-    Blynk.virtualWrite(19, FIXED_ENERGY_PRICE);
-  }
+  Blynk.virtualWrite(vPIN_ENERGY_API, ENERGY_API); // local API Server to get current power price per mWh
 }
-BLYNK_WRITE(19) {
+BLYNK_WRITE(vPIN_ENERGY_API) {
   energyPrice = param.asFloat();
-  Blynk.virtualWrite(18, String(energyPrice, 4) + String('c') );
+  Blynk.virtualWrite(vPIN_ENERGY_PRICE, String(energyPrice, 4) + String('c') );
 }
 
-// the functions for the split-task timers. 
+// the functions for the split-task timers.
 // required to keep the little ESP8266 from disconnections
 void splitTask1() {
   sendTimer1 = timer.setInterval(1000, sendINA219valuesREAL);
@@ -357,55 +344,50 @@ void splitTask3() {
 void splitTask4() {
   sendTimer4 = timer.setInterval(2000, sendINA219valuesENERGY);
 }
-void splitTask5() {
-
-}
 /****************************************************************************/
 void setup() {
-  // begin setup
   Serial.begin(115200);
   WiFi.mode(WIFI_STA);
-  
-  // begin Blynk connection
-  if(!LOCAL_SERVER){
-    Blynk.begin(auth, ssid, pass);
-  } else {
-    Blynk.begin(auth, ssid, pass, IPAddress(192, 168, 1, 2)); // make sure you update the IP/Hostname
-  }
+  // CONNECT TO BLYNK
+#if defined(USE_LOCAL_SERVER)
+  Blynk.begin(AUTH, WIFI_SSID, WIFI_PASS, SERVER);
+#else
+  Blynk.begin(AUTH, WIFI_SSID, WIFI_PASS, );
+#endif
   while (Blynk.connect() == false) {}
-  
-  // setup Over The Air updates
-  ArduinoOTA.setHostname("Power-Monitor-1"); 
+
+  // SETUP OVER THE AIR UPDATES
+  ArduinoOTA.setHostname(OTA_HOSTNAME);
   ArduinoOTA.begin();
-  
-  // start ina219 lib
-  ina219.begin(); 
-  
-  // setup interval timers
+
+  // START INA219
+  ina219.begin();
+
+  // TIMERS
   pollingTimer = timer.setInterval(1000, getINA219values);
   graphTimer = timer.setInterval(2000, sendINA219_GraphValues);
   stopwatchTimer = timer.setInterval(1000, stopwatchCounter);
-  
-  // setup split-task timers so we dont overload ESP 
+
+  // setup split-task timers so we dont overload ESP
   // with too many virtualWrites per second
   splitTimer1 = timer.setTimeout(200, splitTask1);
   splitTimer2 = timer.setTimeout(400, splitTask2);
   splitTimer3 = timer.setTimeout(600, splitTask3);
   splitTimer4 = timer.setTimeout(800, splitTask4);
-  
+
   // start in auto-range mode & sync widget to hardware state
-  autoRange = 1;             
-  Blynk.virtualWrite(7, 1); 
-  
+  autoRange = 1;
+  Blynk.virtualWrite(vPIN_BUTTON_AUTORANGE, 1);
+
   // Check for fixed energy price and update global 'energyPrice'
-  if(!FIXED_ENERGY_PRICE){
-    // No fixed price set, so pull from local API
-    Blynk.virtualWrite(19, "http://192.168.1.2:3000/");
-    priceTimer = timer.setInterval(20000, getPrice); // start a 20sec timer for updates
-  } else {
-    // else set fixed price with configured price
-    energyPrice = FIXED_ENERGY_PRICE;
-  }
+#if defined(FIXED_ENERGY_PRICE)
+  // else set fixed price with configured price
+  energyPrice = FIXED_ENERGY_PRICE;
+#else
+  // No fixed price set, so pull from local API
+  Blynk.virtualWrite(vPIN_ENERGY_API, ENERGY_API);
+  priceTimer = timer.setInterval(20000, getPrice); // start a 20sec timer for updates
+#endif
 }
 /****************************************************************************/
 void loop() {
