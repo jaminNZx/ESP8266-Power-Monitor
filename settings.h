@@ -6,12 +6,12 @@
 /*
      Blynk Auth Code
 */
-  #define AUTH                  "9739e5f9d95941c99ca2b96526e70d5e"
+  #define AUTH                  "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 /*
    Wifi Credentials
 */
-  #define WIFI_SSID             "PrettyFlyForAWiFi"
-  #define WIFI_PASS             "custom2015"
+  #define WIFI_SSID             "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  #define WIFI_PASS             "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 /*
    Over The Air Hostname
 */
