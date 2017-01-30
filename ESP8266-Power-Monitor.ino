@@ -6,6 +6,7 @@
 #include <Wire.h>
 #include <Adafruit_INA219.h>
 #include <SimpleTimer.h>
+#include "wifi_credentials.h"
 #include "settings.h"
 /****************************************************************************/
 SimpleTimer timer;
