@@ -13,17 +13,17 @@ SimpleTimer timer;
 Adafruit_INA219 ina219;
 float shuntvoltage = 0.00;
 float busvoltage = 0.00;
-float current_mA = 0.00, current_mA_Max, current_mA_Avg;
-float loadvoltage = 0.00, loadvoltageMax, loadvoltageAvg;
+float current_mA = 0.00, current_mA_Max;
+float loadvoltage = 0.00, loadvoltageMax;
 float energy = 0.00, energyPrice = 0.000, energyCost, energyPrevious, energyDifference;
 float power = 0.00, powerMax, powerAvg;
 int sendTimer, pollingTimer, priceTimer, graphTimer, autoRange, countdownResetCon, countdownResetClock, counter2, secret, stopwatchTimer;
 long stopwatch;
 int splitTimer1, splitTimer2, splitTimer3, splitTimer4, splitTimer5;
 int sendTimer1, sendTimer2, sendTimer3, sendTimer4, sendTimer5;
-float current_AVG, current_AVG_cycle, current_AVG_1, current_AVG_2, current_AVG_3, current_AVG_4, current_AVG_5;
-float loadvoltage_AVG, loadvoltage_AVG_cycle, loadvoltage_AVG_1, loadvoltage_AVG_2, loadvoltage_AVG_3, loadvoltage_AVG_4, loadvoltage_AVG_5;
-float power_AVG, power_AVG_cycle, power_AVG_1, power_AVG_2, power_AVG_3, power_AVG_4, power_AVG_5;
+int loadvoltage_AVG_cycle = 0, current_AVG_cycle = 0, power_AVG_cycle = 0;
+float loadvoltage_AVG[AVG_DEPTH_VOLTAGE + 1], current_AVG[AVG_DEPTH_CURRENT + 1], power_AVG[AVG_DEPTH_POWER + 1];
+float loadvoltage_AVG_total, current_AVG_total, power_AVG_total;
 /****************************************************************************/
 void getINA219values() {
 
@@ -43,76 +43,39 @@ void getINA219values() {
     energy = 0;
   }
 
-  // gather voltage average from 5 samples over 5 seconds
+  // gather voltage averages
+  loadvoltage_AVG[loadvoltage_AVG_cycle] = loadvoltage;
   loadvoltage_AVG_cycle++;
-  if (loadvoltage_AVG_cycle == 1) {
-    loadvoltage_AVG_1 = loadvoltage;
-  }
-  if (loadvoltage_AVG_cycle == 2) {
-    loadvoltage_AVG_2 = loadvoltage;
-  }
-  if (loadvoltage_AVG_cycle == 3) {
-    loadvoltage_AVG_3 = loadvoltage;
-  }
-  if (loadvoltage_AVG_cycle == 4) {
-    loadvoltage_AVG_4 = loadvoltage;
-  }
-  if (loadvoltage_AVG_cycle == 5) {
-    loadvoltage_AVG_5 = loadvoltage;
+  if (loadvoltage_AVG_cycle == AVG_DEPTH_VOLTAGE) {
     loadvoltage_AVG_cycle = 0;
   }
 
-  // gather current average from 5 samples over 5 seconds
+  // gather current averages
+  current_AVG[current_AVG_cycle] = current_mA;
   current_AVG_cycle++;
-  if (current_AVG_cycle == 1) {
-    current_AVG_1 = current_mA;
-  }
-  if (current_AVG_cycle == 2) {
-    current_AVG_2 = current_mA;
-  }
-  if (current_AVG_cycle == 3) {
-    current_AVG_3 = current_mA;
-  }
-  if (current_AVG_cycle == 4) {
-    current_AVG_4 = current_mA;
-  }
-  if (current_AVG_cycle == 5) {
-    current_AVG_5 = current_mA;
+  if (current_AVG_cycle == AVG_DEPTH_CURRENT) {
     current_AVG_cycle = 0;
   }
 
-  // gather power average from 5 samples over 5 seconds
+  // gather power averages
+  power_AVG[power_AVG_cycle] = power;
   power_AVG_cycle++;
-  if (power_AVG_cycle == 1) {
-    power_AVG_1 = power;
-  }
-  if (power_AVG_cycle == 2) {
-    power_AVG_2 = power;
-  }
-  if (power_AVG_cycle == 3) {
-    power_AVG_3 = power;
-  }
-  if (power_AVG_cycle == 4) {
-    power_AVG_4 = power;
-  }
-  if (power_AVG_cycle == 5) {
-    power_AVG_5 = power;
+  if (power_AVG_cycle == AVG_DEPTH_POWER) {
     power_AVG_cycle = 0;
   }
-
 }
 
 // this function is for updaing the REAL TIME values and is on a timer
 void sendINA219valuesREAL() {
-  // LOAD VOLTAGE (REAL TIME)
+  // VOLTAGE
   Blynk.virtualWrite(vPIN_VOLTAGE_REAL, String(loadvoltage, 4) + String(" V") );
-  // LOAD POWER (REAL TIME)
+  // POWER
   if (power > 1000 && autoRange == 1) {
     Blynk.virtualWrite(vPIN_POWER_REAL, String((power / 1000), 3) + String(" W") );
   } else {
     Blynk.virtualWrite(vPIN_POWER_REAL, String(power, 3) + String(" mW") );
   }
-  // LOAD CURRENT (REAL TIME)
+  // CURRENT (REAL TIME)
   if (current_mA > 1000 && autoRange == 1) {
     Blynk.virtualWrite(vPIN_CURRENT_REAL, String((current_mA / 1000), 3) + String(" A") );
   } else {
@@ -122,26 +85,34 @@ void sendINA219valuesREAL() {
 
 // this function is for updaing the AVERGE values and is on a timer
 void sendINA219valuesAVG() {
-  // LOAD VOLTAGE (AVERAGE)
-  loadvoltage_AVG = (loadvoltage_AVG_1 + loadvoltage_AVG_2 + loadvoltage_AVG_3 + loadvoltage_AVG_4 + loadvoltage_AVG_5) / 5;
-  Blynk.virtualWrite(vPIN_VOLTAGE_AVG, String(loadvoltage_AVG, 3) + String(" V"));
+  // VOLTAGE
+  for (int i = 0; i < (AVG_DEPTH_VOLTAGE - 1); i++) {
+    loadvoltage_AVG_total += loadvoltage_AVG[i];
+  }
+  loadvoltage_AVG_total = loadvoltage_AVG_total / AVG_DEPTH_VOLTAGE;
+  Blynk.virtualWrite(vPIN_VOLTAGE_AVG, String(loadvoltage_AVG_total, 3) + String(" V"));
 
-  // LOAD CURRENT (AVERAGE)
-  current_AVG = (current_AVG_1 + current_AVG_2 + current_AVG_3 + current_AVG_4 + current_AVG_5) / 5;
-  if (current_AVG > 1000 && autoRange == 1) {
-    Blynk.virtualWrite(vPIN_CURRENT_AVG, String((current_AVG / 1000), 2) + String(" A"));
+  // CURRENT
+  for (int i = 0; i < (AVG_DEPTH_CURRENT - 1); i++) {
+    current_AVG_total += current_AVG[i];
+  }
+  current_AVG_total = current_AVG_total / AVG_DEPTH_CURRENT;
+  if (current_AVG_total > 1000 && autoRange == 1) {
+    Blynk.virtualWrite(vPIN_CURRENT_AVG, String((current_AVG_total / 1000), 2) + String(" A"));
   } else {
-    Blynk.virtualWrite(vPIN_CURRENT_AVG, String(current_AVG, 2) + String(" mA"));
+    Blynk.virtualWrite(vPIN_CURRENT_AVG, String(current_AVG_total, 2) + String(" mA"));
   }
 
-  // LOAD POWER (AVERAGE)
-  power_AVG = (power_AVG_1 + power_AVG_2 + power_AVG_3 + power_AVG_4 + power_AVG_5) / 5;
-  if (power_AVG > 1000 && autoRange == 1) {
-    Blynk.virtualWrite(vPIN_POWER_AVG, String((power_AVG / 1000), 2) + String(" W"));
-  } else {
-    Blynk.virtualWrite(vPIN_POWER_AVG, String(power_AVG, 2) + String(" mW"));
+  // POWER
+  for (int i = 0; i < (AVG_DEPTH_POWER - 1); i++) {
+    power_AVG_total += power_AVG[i];
   }
-
+  power_AVG_total = power_AVG_total / AVG_DEPTH_POWER;
+  if (power_AVG_total > 1000 && autoRange == 1) {
+    Blynk.virtualWrite(vPIN_POWER_AVG, String((power_AVG_total / 1000), 2) + String(" W"));
+  } else {
+    Blynk.virtualWrite(vPIN_POWER_AVG, String(power_AVG_total, 2) + String(" mW"));
+  }
 }
 
 // this function is for updaing the MAX values and is on a timer
@@ -183,7 +154,7 @@ void sendINA219valuesENERGY() {
   energyPrevious = energy;
   // ENERGY COST
   energyCost = energyCost + ((energyPrice / 1000 / 100) * energyDifference);
-  if(energyCost > 9.999){
+  if (energyCost > 9.999) {
     Blynk.virtualWrite(vPIN_ENERGY_COST, String((energyCost), 7));
   } else {
     Blynk.virtualWrite(vPIN_ENERGY_COST, String((energyCost), 8));
@@ -192,7 +163,7 @@ void sendINA219valuesENERGY() {
 
 // this is feeding raw data to the graph
 void sendINA219_GraphValues() {
-  Blynk.virtualWrite(vPIN_CURRENT_GRAPH, current_AVG);
+  Blynk.virtualWrite(vPIN_CURRENT_GRAPH, current_AVG_total);
 }
 
 // HOLD BUTTON
@@ -213,10 +184,10 @@ BLYNK_WRITE(vPIN_BUTTON_HOLD) {
 // this function only runs when in HOLD mode and select AUTO-RANGE
 void updateINA219eXtraValues() {
   Blynk.virtualWrite(vPIN_VOLTAGE_PEAK, String(loadvoltageMax, 3) + String(" V") );
-  if (current_AVG > 1000 && autoRange == 1) {
-    Blynk.virtualWrite(vPIN_CURRENT_PEAK, String((current_AVG / 1000), 2) + String(" A") );
+  if (current_AVG_total > 1000 && autoRange == 1) {
+    Blynk.virtualWrite(vPIN_CURRENT_PEAK, String((current_AVG_total / 1000), 2) + String(" A") );
   } else {
-    Blynk.virtualWrite(vPIN_CURRENT_PEAK, String(current_AVG, 2) + String(" mA"));
+    Blynk.virtualWrite(vPIN_CURRENT_PEAK, String(current_AVG_total, 2) + String(" mA"));
   }
   if (powerMax > 1000 && autoRange == 1) {
     Blynk.virtualWrite(vPIN_POWER_PEAK, String((powerMax / 1000), 2) + String(" W") );
@@ -241,24 +212,15 @@ BLYNK_WRITE(vPIN_BUTTON_RESET_AVG) {
     Blynk.virtualWrite(vPIN_VOLTAGE_AVG,  "--- V");
     Blynk.virtualWrite(vPIN_CURRENT_AVG, "--- mA");
     Blynk.virtualWrite(vPIN_POWER_AVG, "--- mW");
-    loadvoltage_AVG = loadvoltage;
-    loadvoltage_AVG_1 = loadvoltage;
-    loadvoltage_AVG_2 = loadvoltage;
-    loadvoltage_AVG_3 = loadvoltage;
-    loadvoltage_AVG_4 = loadvoltage;
-    loadvoltage_AVG_5 = loadvoltage;
-    current_AVG = current_mA;
-    current_AVG_1 = current_mA;
-    current_AVG_2 = current_mA;
-    current_AVG_3 = current_mA;
-    current_AVG_4 = current_mA;
-    current_AVG_5 = current_mA;
-    power_AVG = power;
-    power_AVG_1 = power;
-    power_AVG_2 = power;
-    power_AVG_3 = power;
-    power_AVG_4 = power;
-    power_AVG_5 = power;
+    for (int i = 0; i < AVG_DEPTH_VOLTAGE; i++) {
+      loadvoltage_AVG[i] = loadvoltage;
+    }
+    for (int i = 0; i < AVG_DEPTH_CURRENT; i++) {
+      current_AVG[i] = current_mA;
+    }
+    for (int i = 0; i < AVG_DEPTH_POWER; i++) {
+      power_AVG[i] = power;
+    }
     delay(50);
     updateINA219eXtraValues();
     countdownResetCon = timer.setTimeout(1000, countdownResetConCallback);

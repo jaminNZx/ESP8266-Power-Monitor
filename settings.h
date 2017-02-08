@@ -22,6 +22,14 @@
 //#define FIXED_ENERGY_PRICE        9.934
 #define ENERGY_API                  "http://192.168.1.2:3000/"
 /*
+   Value Average Settings. 
+   Set the number of samples to take for the average values. 
+   Value = Seconds (default 5 seconds)
+*/
+#define AVG_DEPTH_VOLTAGE           5
+#define AVG_DEPTH_CURRENT           5
+#define AVG_DEPTH_POWER             5
+/*
    Virtual Pins - Base
 */
 #define vPIN_VOLTAGE_REAL           V1 
