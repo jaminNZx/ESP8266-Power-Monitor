@@ -181,7 +181,7 @@ BLYNK_WRITE(vPIN_BUTTON_HOLD) {
   }
 }
 
-// this function only runs when in HOLD mode and select AUTO-RANGE
+// this function only runs when in HOLD mode and select AUTO-RANGE. just shows latest values on demand
 void updateINA219eXtraValues() {
   Blynk.virtualWrite(vPIN_VOLTAGE_PEAK, String(loadvoltageMax, 3) + String(" V") );
   if (current_AVG_total > 1000 && autoRange == 1) {
@@ -206,19 +206,19 @@ BLYNK_WRITE(vPIN_BUTTON_AUTORANGE) {
   updateINA219eXtraValues();
 }
 
-// RESET AVERAGES
+// RESET AVERAGES (short) & RESET STOPWATCH (long)
 BLYNK_WRITE(vPIN_BUTTON_RESET_AVG) {
   if (param.asInt()) {
     Blynk.virtualWrite(vPIN_VOLTAGE_AVG,  "--- V");
     Blynk.virtualWrite(vPIN_CURRENT_AVG, "--- mA");
     Blynk.virtualWrite(vPIN_POWER_AVG, "--- mW");
-    for (int i = 0; i < AVG_DEPTH_VOLTAGE; i++) {
+    for (int i = 0; i < (AVG_DEPTH_VOLTAGE - 1); i++) {
       loadvoltage_AVG[i] = loadvoltage;
     }
-    for (int i = 0; i < AVG_DEPTH_CURRENT; i++) {
+    for (int i = 0; i < (AVG_DEPTH_CURRENT - 1); i++) {
       current_AVG[i] = current_mA;
     }
-    for (int i = 0; i < AVG_DEPTH_POWER; i++) {
+    for (int i = 0; i < (AVG_DEPTH_POWER - 1); i++) {
       power_AVG[i] = power;
     }
     delay(50);
@@ -237,7 +237,7 @@ void countdownResetConCallback() {
   energyPrevious = 0;
 }
 
-// RESET PEAKS
+// RESET PEAKS (short) & RESET CONSUMTION (long) 
 BLYNK_WRITE(vPIN_BUTTON_RESET_MAX) {
   if (param.asInt()) {
     Blynk.virtualWrite(vPIN_VOLTAGE_PEAK, "--- V");
@@ -289,7 +289,7 @@ void stopwatchCounter() {
 
 // This section is for setting the kWh price from your electric company.
 // I use a SPOT rate which means I need to update it all the time.
-// If you know your set price per kWh (in cents), then enter the price at the top of the sketch: FIXED_ENERGY_PRICE
+// If you know your set price per kWh (in cents), then enter the price in settings: FIXED_ENERGY_PRICE
 void getPrice() {
   Blynk.virtualWrite(vPIN_ENERGY_API, ENERGY_API); // local API Server to get current power price per mWh
 }
