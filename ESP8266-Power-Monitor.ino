@@ -17,7 +17,7 @@ float current_mA = 0.00, current_mA_Max, current_mA_Avg;
 float loadvoltage = 0.00, loadvoltageMax, loadvoltageAvg;
 float energy = 0.00, energyPrice = 0.000, energyCost, energyPrevious, energyDifference;
 float power = 0.00, powerMax, powerAvg;
-int sendTimer, pollingTimer, priceTimer, graphTimer, autoRange, stopwatchResetCounter, counter2, secret, stopwatchTimer;
+int sendTimer, pollingTimer, priceTimer, graphTimer, autoRange, countdownResetCon, countdownResetClock, counter2, secret, stopwatchTimer;
 long stopwatch;
 int splitTimer1, splitTimer2, splitTimer3, splitTimer4, splitTimer5;
 int sendTimer1, sendTimer2, sendTimer3, sendTimer4, sendTimer5;
@@ -183,7 +183,11 @@ void sendINA219valuesENERGY() {
   energyPrevious = energy;
   // ENERGY COST
   energyCost = energyCost + ((energyPrice / 1000 / 100) * energyDifference);
-  Blynk.virtualWrite(vPIN_ENERGY_COST, String((energyCost), 8));
+  if(energyCost > 9.999){
+    Blynk.virtualWrite(vPIN_ENERGY_COST, String((energyCost), 7));
+  } else {
+    Blynk.virtualWrite(vPIN_ENERGY_COST, String((energyCost), 8));
+  }
 }
 
 // this is feeding raw data to the graph
@@ -233,7 +237,7 @@ BLYNK_WRITE(vPIN_BUTTON_AUTORANGE) {
 
 // RESET AVERAGES
 BLYNK_WRITE(vPIN_BUTTON_RESET_AVG) {
-  if (param.asInt() && secret == 0) {
+  if (param.asInt()) {
     Blynk.virtualWrite(vPIN_VOLTAGE_AVG,  "--- V");
     Blynk.virtualWrite(vPIN_CURRENT_AVG, "--- mA");
     Blynk.virtualWrite(vPIN_POWER_AVG, "--- mW");
@@ -257,12 +261,23 @@ BLYNK_WRITE(vPIN_BUTTON_RESET_AVG) {
     power_AVG_5 = power;
     delay(50);
     updateINA219eXtraValues();
+    countdownResetCon = timer.setTimeout(1000, countdownResetConCallback);
+  } else {
+    timer.disable(countdownResetCon);
   }
+
+}
+void countdownResetConCallback() {
+  Blynk.virtualWrite(vPIN_ENERGY_USED, "0.000000 mWh");
+  Blynk.virtualWrite(vPIN_ENERGY_COST, "0.00000000");
+  energy = 0;
+  energyCost = 0;
+  energyPrevious = 0;
 }
 
 // RESET PEAKS
 BLYNK_WRITE(vPIN_BUTTON_RESET_MAX) {
-  if (param.asInt() && secret == 0) {
+  if (param.asInt()) {
     Blynk.virtualWrite(vPIN_VOLTAGE_PEAK, "--- V");
     Blynk.virtualWrite(vPIN_CURRENT_PEAK, "--- mA");
     Blynk.virtualWrite(vPIN_POWER_PEAK, "--- mW");
@@ -271,24 +286,14 @@ BLYNK_WRITE(vPIN_BUTTON_RESET_MAX) {
     powerMax = power;
     delay(50);
     updateINA219eXtraValues();
-    stopwatchResetCounter = timer.setTimeout(1000, countdownToReset);
+    countdownResetClock = timer.setTimeout(1000, countdownResetClockCallback);
   } else {
-    timer.disable(stopwatchResetCounter);
+    timer.disable(countdownResetClock);
   }
 }
-
-// this the callback for holding a button longer than 1 second
-// it needs work.. secret = 1?? srsly?.. I need to change this
-void countdownToReset() {
-  secret = 1;
-  counter2 = timer.setTimeout(500, countdownToNormal);
+void countdownResetClockCallback() {
   Blynk.virtualWrite(vPIN_ENERGY_TIME, "--:--:--:--");
   stopwatch = 0;
-  timer.enable(stopwatchTimer);
-}
-// callback to change button function back to normal... also needs work
-void countdownToNormal() {
-  secret = 0;
 }
 
 // the stopwatch counter which is run on a timer
