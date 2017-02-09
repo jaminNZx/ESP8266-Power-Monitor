@@ -39,7 +39,8 @@
 #define vPIN_CURRENT_REAL           V4
 #define vPIN_CURRENT_AVG            V5 
 #define vPIN_CURRENT_PEAK           V6
-#define vPIN_CURRENT_GRAPH          V7
+
+#define vPIN_GRAPH                  V7
 
 #define vPIN_POWER_REAL             V8
 #define vPIN_POWER_AVG              V9   

@@ -147,9 +147,9 @@ void sendINA219valuesENERGY() {
   energyDifference = energy - energyPrevious;
   // ENERGY CONSUMPTION
   if (energy > 1000 && autoRange == 1) {
-    Blynk.virtualWrite(vPIN_ENERGY_USED, String((energy / 1000), 6) + String(" kWh"));
+    Blynk.virtualWrite(vPIN_ENERGY_USED, String((energy / 1000), 5) + String(" kWh"));
   } else {
-    Blynk.virtualWrite(vPIN_ENERGY_USED, String(energy, 6) + String(" mWh"));
+    Blynk.virtualWrite(vPIN_ENERGY_USED, String(energy, 5) + String(" mWh"));
   }
   energyPrevious = energy;
   // ENERGY COST
@@ -163,7 +163,7 @@ void sendINA219valuesENERGY() {
 
 // this is feeding raw data to the graph
 void sendINA219_GraphValues() {
-  Blynk.virtualWrite(vPIN_CURRENT_GRAPH, current_AVG_total);
+  Blynk.virtualWrite(vPIN_GRAPH, current_mA);
 }
 
 // HOLD BUTTON
@@ -230,7 +230,7 @@ BLYNK_WRITE(vPIN_BUTTON_RESET_AVG) {
 
 }
 void countdownResetConCallback() {
-  Blynk.virtualWrite(vPIN_ENERGY_USED, "0.000000 mWh");
+  Blynk.virtualWrite(vPIN_ENERGY_USED, "0.00000 mWh");
   Blynk.virtualWrite(vPIN_ENERGY_COST, "0.00000000");
   energy = 0;
   energyCost = 0;
