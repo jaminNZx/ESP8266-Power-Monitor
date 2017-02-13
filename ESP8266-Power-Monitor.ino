@@ -1,6 +1,9 @@
+#ifdef DEBUG
+#define BLYNK_PRINT Serial
+#endif
 #define BLYNK_MAX_READBYTES 512
 /****************************************************************************/
-#include <ArduinoOTA.h>
+
 #include <ESP8266WiFi.h>
 #include <BlynkSimpleEsp8266.h>
 #include <Wire.h>
@@ -8,6 +11,9 @@
 #include <SimpleTimer.h>
 #include "wifi_credentials.h"
 #include "settings.h"
+#ifdef OTA_UPDATES
+#include <ArduinoOTA.h>
+#endif
 /****************************************************************************/
 SimpleTimer timer;
 Adafruit_INA219 ina219;
@@ -237,7 +243,7 @@ void countdownResetConCallback() {
   energyPrevious = 0;
 }
 
-// RESET PEAKS (short) & RESET CONSUMTION (long) 
+// RESET PEAKS (short) & RESET CONSUMTION (long)
 BLYNK_WRITE(vPIN_BUTTON_RESET_MAX) {
   if (param.asInt()) {
     Blynk.virtualWrite(vPIN_VOLTAGE_PEAK, "--- V");
@@ -287,6 +293,7 @@ void stopwatchCounter() {
   Blynk.virtualWrite(vPIN_ENERGY_TIME, days + hours_o + hours + mins_o + mins + secs_o + secs);
 }
 
+#ifdef FIXED_ENERGY_PRICE
 // This section is for setting the kWh price from your electric company.
 // I use a SPOT rate which means I need to update it all the time.
 // If you know your set price per kWh (in cents), then enter the price in settings: FIXED_ENERGY_PRICE
@@ -297,6 +304,7 @@ BLYNK_WRITE(vPIN_ENERGY_API) {
   energyPrice = param.asFloat();
   Blynk.virtualWrite(vPIN_ENERGY_PRICE, String(energyPrice, 4) + String('c') );
 }
+#endif
 
 // the functions for the split-task timers.
 // required to keep the little ESP8266 from disconnections
@@ -317,17 +325,17 @@ void setup() {
   Serial.begin(115200);
   WiFi.mode(WIFI_STA);
   // CONNECT TO BLYNK
-#if defined(USE_LOCAL_SERVER)
+#ifdef USE_LOCAL_SERVER
   Blynk.begin(AUTH, WIFI_SSID, WIFI_PASS, SERVER);
 #else
   Blynk.begin(AUTH, WIFI_SSID, WIFI_PASS, );
 #endif
   while (Blynk.connect() == false) {}
-
+#ifdef OTA_UPDATES
   // SETUP OVER THE AIR UPDATES
   ArduinoOTA.setHostname(OTA_HOSTNAME);
   ArduinoOTA.begin();
-
+#endif
   // START INA219
   ina219.begin();
 
@@ -348,7 +356,7 @@ void setup() {
   Blynk.virtualWrite(vPIN_BUTTON_AUTORANGE, 1);
 
   // Check for fixed energy price and update global 'energyPrice'
-#if defined(FIXED_ENERGY_PRICE)
+#ifdef FIXED_ENERGY_PRICE
   // else set fixed price with configured price
   energyPrice = FIXED_ENERGY_PRICE;
   Blynk.virtualWrite(vPIN_ENERGY_PRICE, String(FIXED_ENERGY_PRICE, 4) + String('c') );
@@ -362,6 +370,8 @@ void setup() {
 void loop() {
   // the loop... dont touch or add to this!
   Blynk.run();
+#ifdef OTA_UPDATES
   ArduinoOTA.handle();
+#endif
   timer.run();
 }
