@@ -40,6 +40,11 @@ Diagrams to come...
 ###Settings.h
 
 * Replace AUTH with your own Auth code.
+* If you are using Over the Air updates (Optional) then just make sure the following line is active as well as setting a Hostname.
+```cpp
+#define OTA_UPDATES
+#define OTA_HOSTNAME    "POWER-MONITOR"
+```
 * If you are using the Blynk Cloud server then comment out the line below:
 ```cpp
 //#define USE_LOCAL_SERVER
@@ -63,7 +68,9 @@ Diagrams to come...
 #define AVG_DEPTH_POWER             5
 ```
 
+###Upload 
 
+Compile and upload to your 
 
 
 
