@@ -40,6 +40,9 @@ Diagrams to come...
 ###Settings.h
 
 * Replace AUTH with your own Auth code.
+```cpp
+#define AUTH    "xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+```
 * If you are using Over the Air updates (Optional) then just make sure the following line is active as well as setting a Hostname.
 ```cpp
 #define OTA_UPDATES
@@ -58,7 +61,7 @@ Diagrams to come...
 #define FIXED_ENERGY_PRICE     9.934
 //#define ENERGY_API           "http://192.168.1.2:3000/"
 ```
-* You can define the average sample rate (in seconds) for each type of measurment. 
+* You can define the average sample depth (in seconds) for each type of measurment. 
  * Lower = Fast but less accurate. 
  * Higher = Slow but accurate. 
  * 5-10 is a good range. 
@@ -70,8 +73,14 @@ Diagrams to come...
 
 ###Upload 
 
-Compile and upload to your 
+* Compile and upload to your sktech to your WeMos or NodeMcu style ESP8266 as you would on any other sketch via USB.
+ * If you are using Over The Air Updates, then after your first upload, you must disconnect power (USB in this example), then connect it again! Once it boots up again you will then see it in your IDE > Ports menu. If you do not power cycle the ESP, you will face issues uploading your first sketch. 
+* Run Blynk Mobile App and open your project. Press the Play icon in the top corner to start the project. 
+* If all has been done correctly, you should at least see the stopwatch counting. If it isn't then you need to troubleshoot. 
 
+##Troubleshooting
 
+If you have any technical questions, reply to one of my posts in the support forums with your question. I will usually reply within a day. 
 
+----
 ![INA219 Power Monitor running on Blynk](http://community.blynk.cc/uploads/default/original/2X/d/d8380acfb7de92c7fef6b4c939a5e46bf0166eac.PNG)
