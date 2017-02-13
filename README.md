@@ -36,21 +36,33 @@ Diagrams to come...
 * Email yourself the Auth code. 
 * Download this repo and copy the files in to your sketches directory. Open the sketch in Arduino IDE. 
 * Go to the settings.h tab. This is where all the customisable settings are. You should be able to change almost everything from there before compiling. 
-* Enter the Auth code you were provided in to settings.h. 
 
 ###Settings.h
 
-* Replace AUTH "xxxxxxxxxxx" with your own Auth code.
-* If you are using the Blynk Cloud server (most beginners do) then comment out the line below
-
-From
-```cpp
-#define USE_LOCAL_SERVER
-```
-to
+* Replace AUTH with your own Auth code.
+* If you are using the Blynk Cloud server then comment out the line below:
 ```cpp
 //#define USE_LOCAL_SERVER
 ```
+* Otherwise enter your local server IP address below:
+```cpp
+#define SERVER    IPAddress(192, 168, 1, 2)
+```
+* Enter your fixed energy price per kWh in cents or enter the address of the API where you can get the latest price. Comment out or delete which ever you don't use.
+```cpp
+#define FIXED_ENERGY_PRICE     9.934
+//#define ENERGY_API           "http://192.168.1.2:3000/"
+```
+* You can define the average sample rate (in seconds) for each type of measurment. 
+ * Lower = Fast but less accurate. 
+ * Higher = Slow but accurate. 
+ * 5-10 is a good range. 
+```cpp
+#define AVG_DEPTH_VOLTAGE           5
+#define AVG_DEPTH_CURRENT           5
+#define AVG_DEPTH_POWER             5
+```
+
 
 
 
