@@ -9,7 +9,7 @@
 #include <Wire.h>
 #include <Adafruit_INA219.h>
 #include <SimpleTimer.h>
-#include "wifi_credentials.h"
+#include "wifi_credentials.h" // see ReadMe
 #include "settings.h"
 #ifdef OTA_UPDATES
 #include <ArduinoOTA.h>
