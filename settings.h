@@ -4,14 +4,21 @@
 
  **************************************************************/
 /*
+  Hardware Type 
+*/
+//#define ESP8266
+#define ESP32
+/*
      Blynk Auth Code
 */
 #define AUTH                      "9739e5f9d95941c99ca2b96526e70d5e"
 /*
    Over The Air Hostname
 */
+#ifndef ESP32
 #define OTA_UPDATES
 #define OTA_HOSTNAME              "POWER-MONITOR"
+#endif
 /*
    Local Server Settings (uncomment to use local server)
 */
