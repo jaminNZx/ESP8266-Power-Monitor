@@ -293,13 +293,16 @@ void stopwatchCounter() {
   Blynk.virtualWrite(vPIN_ENERGY_TIME, days + hours_o + hours + mins_o + mins + secs_o + secs);
 }
 
-#ifdef FIXED_ENERGY_PRICE
+
 // This section is for setting the kWh price from your electric company.
 // I use a SPOT rate which means I need to update it all the time.
 // If you know your set price per kWh (in cents), then enter the price in settings: FIXED_ENERGY_PRICE
 void getPrice() {
+  #ifdef FIXED_ENERGY_PRICE
   Blynk.virtualWrite(vPIN_ENERGY_API, ENERGY_API); // local API Server to get current power price per mWh
+  #endif
 }
+#ifdef FIXED_ENERGY_PRICE
 BLYNK_WRITE(vPIN_ENERGY_API) {
   energyPrice = param.asFloat();
   Blynk.virtualWrite(vPIN_ENERGY_PRICE, String(energyPrice, 4) + String('c') );
