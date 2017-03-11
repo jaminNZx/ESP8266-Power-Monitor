@@ -1,6 +1,4 @@
-#ifdef DEBUG
 #define BLYNK_PRINT Serial
-#endif
 #define BLYNK_MAX_READBYTES 512
 /****************************************************************************/
 
