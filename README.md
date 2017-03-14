@@ -32,7 +32,7 @@ Diagrams to come...
 ##Software
 
 * Download and install the Blynk Mobile App for iOS or Android.
-* Scan the QR code at the bottom of this page to clone the screenshot or create a new project yourself and manually arrange and setup the widgets. 
+* Scan the QR code at the bottom of this page to clone the project or create a new project yourself and manually arrange and setup the widgets. 
 * Email yourself the Auth code. 
 * Download this repo and copy the files in to your sketches directory. Open the sketch in Arduino IDE. 
 * Go to the settings.h tab. This is where all the customisable settings are. You should be able to change almost everything from there before compiling. 
