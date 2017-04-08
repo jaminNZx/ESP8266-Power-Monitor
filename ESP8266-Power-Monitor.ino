@@ -183,11 +183,7 @@ void updateINA219eXtraValues() {
 
 // AUTO RANGE BUTTON
 BLYNK_WRITE(vPIN_BUTTON_AUTORANGE) {
-  if (param.asInt()) {
-    autoRange = 1;
-  } else {
-    autoRange = 0;
-  }
+  autoRange = param.asInt();
   updateINA219eXtraValues();
 }
 
@@ -315,7 +311,7 @@ void setup() {
   Blynk.virtualWrite(vPIN_ENERGY_API, ENERGY_API);
   priceTimer = timer.setInterval(20000, []() {
     Blynk.virtualWrite(vPIN_ENERGY_API, ENERGY_API);
-  }); 
+  });
 #endif
 }
 /****************************************************************************/
