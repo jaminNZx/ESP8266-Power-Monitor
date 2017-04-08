@@ -3,6 +3,7 @@
                             Settings
 
  **************************************************************/
+#include "wifi_credentials.h" // see ReadMe
 /*
      Blynk Auth Code
 */
