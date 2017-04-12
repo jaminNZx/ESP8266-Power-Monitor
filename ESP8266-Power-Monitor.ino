@@ -284,16 +284,16 @@ void setup() {
 
   // setup split-task timers so we dont overload ESP
   // with too many virtualWrites per second
-  splitTimer1 = timer.setTimeout(200, []() {
+  timer.setTimeout(200, []() {
     sendTimer1 = timer.setInterval(1000, sendINA219valuesREAL);
   });
-  splitTimer2 = timer.setTimeout(400, []() {
+  timer.setTimeout(400, []() {
     sendTimer2 = timer.setInterval(1000, sendINA219valuesAVG);
   });
-  splitTimer3 = timer.setTimeout(600, []() {
+  timer.setTimeout(600, []() {
     sendTimer3 = timer.setInterval(1000, sendINA219valuesMAX);
   });
-  splitTimer4 = timer.setTimeout(800, []() {
+  timer.setTimeout(800, []() {
     sendTimer4 = timer.setInterval(2000, sendINA219valuesENERGY);
   });
 
