@@ -6,12 +6,12 @@
 #include <BlynkSimpleEsp8266.h>
 #include <Wire.h>
 #include <Adafruit_INA219.h>
-#include <SimpleTimer.h>
+//#include <SimpleTimer.h>
 #ifdef OTA_UPDATES
 #include <ArduinoOTA.h>
 #endif
 /****************************************************************************/
-SimpleTimer timer;
+BlynkTimer timer;
 Adafruit_INA219 ina219;
 float shuntvoltage = 0.00;
 float busvoltage = 0.00;
